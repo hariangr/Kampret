@@ -23,6 +23,13 @@ fn interpret(src: &str) {
     while let Some(it) = lexed.next() {
         // println!("{:?}\n", it);
 
+        if it.is_i64() {
+            panic!("i64 can only be created inside a variable")
+        }
+        if it.is_string() {
+            panic!("string can only be created inside a variable")
+        }
+
         if it.is_symbol() {
             match it.as_symbol().unwrap() {
                 STRING_CONST => {
@@ -39,9 +46,20 @@ fn interpret(src: &str) {
                         .pop()
                         .expect("Print expect at least one item in stack");
                     match pop_stack {
+                        DataTypes::KString(it) => print!("{}", it),
+                        DataTypes::KI64(it) => print!("{}", it),
+                        _ => panic!("Echo can only print string and i64 from stack at this time"),
+                    }
+                    continue;
+                }
+                "println" => {
+                    let pop_stack = stacks
+                        .pop()
+                        .expect("Print expect at least one item in stack");
+                    match pop_stack {
                         DataTypes::KString(it) => println!("{}", it),
                         DataTypes::KI64(it) => println!("{}", it),
-                        _ => panic!("Print can only print string from stack at this time"),
+                        _ => panic!("Print can only print string and i64 from stack at this time"),
                     }
                     continue;
                 }
