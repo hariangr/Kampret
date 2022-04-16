@@ -40,6 +40,7 @@ fn interpret(src: &str) {
                         .expect("Print expect at least one item in stack");
                     match pop_stack {
                         DataTypes::KString(it) => println!("{}", it),
+                        DataTypes::KI64(it) => println!("{}", it),
                         _ => panic!("Print can only print string from stack at this time"),
                     }
                     continue;
