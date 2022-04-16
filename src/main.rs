@@ -4,6 +4,7 @@ use std::fs;
 pub enum DataTypes {
     KString(String),
     KNil,
+    KI64(i64),
 }
 
 const STRING_CONST: &str = "string.const";
@@ -23,40 +24,57 @@ fn interpret(src: &str) {
         // println!("{:?}\n", it);
 
         if it.is_symbol() {
-            let it = it.as_symbol().unwrap();
-
-            if it == STRING_CONST {
-                let content = lexed
-                    .next()
-                    .unwrap()
-                    .as_str()
-                    .expect("failed adding string to stack");
-                stacks.push(DataTypes::KString(content.to_owned()));
-                continue;
-            }
-
-            if it == "print" {
-                let pop_stack = stacks
-                    .pop()
-                    .expect("Print expect at least one item in stack");
-                match pop_stack {
-                    DataTypes::KString(it) => println!("{}", it),
-                    _ => panic!("Print can only print string from stack at this time")
+            match it.as_symbol().unwrap() {
+                STRING_CONST => {
+                    let content = lexed
+                        .next()
+                        .unwrap()
+                        .as_str()
+                        .expect("failed adding string to stack");
+                    stacks.push(DataTypes::KString(content.to_owned()));
+                    continue;
                 }
-                continue;
+                "print" => {
+                    let pop_stack = stacks
+                        .pop()
+                        .expect("Print expect at least one item in stack");
+                    match pop_stack {
+                        DataTypes::KString(it) => println!("{}", it),
+                        _ => panic!("Print can only print string from stack at this time"),
+                    }
+                    continue;
+                }
+                "i64.const" => {
+                    let content = lexed
+                        .next()
+                        .unwrap()
+                        .as_i64()
+                        .expect("failed adding i64 to stack");
+                    stacks.push(DataTypes::KI64(content));
+                }
+                "i64.add" => {
+                    if let DataTypes::KI64(rhs) =
+                        stacks.pop().expect("can't get right hand operand")
+                    {
+                        if let DataTypes::KI64(lhs) =
+                            stacks.pop().expect("can't get left hand operand")
+                        {
+                            stacks.push(DataTypes::KI64(lhs + rhs));
+                            continue;
+                        }
+                    }
+                    // This code will ever get executed if either left or right operand isn't a KI64 variant
+                    // There's not `if let not` in Rust it seems, see https://github.com/rust-lang/rfcs/issues/2616
+                    panic!("i64 addition require the two operand to be i64 number")
+                }
+                stmt => {
+                    panic!("Statement of {} is not supported, maybe yet, or ever", stmt);
+                }
             }
         }
     }
 
     println!("\n--------------\nStacks: {:?}\n", stacks);
-
-    // for it in lexed.list_iter().expect("Expected at least one module") {
-    //     if it.is_symbol() {
-    //         println!("{:?}\n", it.as_symbol().unwrap());
-    //     } else {
-    //         println!("{:?}\n", it);
-    //     }
-    // }
 }
 
 fn main() {
