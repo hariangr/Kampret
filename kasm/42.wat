@@ -1,1 +1,4 @@
-(module)
+(module
+  string.const "hello world"
+  print
+)
